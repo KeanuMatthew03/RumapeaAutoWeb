@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  BUYER
+}
+
+enum CarCondition {
+  NEW
+  USED
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum CarStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      Role     @default(BUYER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inquiries Inquiry[]
+
+  @@index([email])
+}
+
+model Car {
+  id           String       @id @default(cuid())
+  brand        String
+  model        String
+  year         Int
+  price        Int
+  mileage      Int
+  condition    CarCondition
+  transmission Transmission
+  fuelType     FuelType
+  color        String
+  description  String?      @db.Text
+  status       CarStatus    @default(AVAILABLE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  images    CarImage[]
+  inquiries Inquiry[]
+
+  @@index([brand])
+  @@index([status])
+  @@index([price])
+  @@index([year])
+}
+
+model CarImage {
+  id        String   @id @default(cuid())
+  url       String
+  isPrimary Boolean  @default(false)
+  carId     String
+  createdAt DateTime @default(now())
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@index([carId])
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  carId     String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  car  Car   @relation(fields: [carId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([carId])
+  @@index([isRead])
+}
