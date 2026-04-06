@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Loader2, Info } from "lucide-react";
 import Link from "next/link";
 import { updateCarAction } from "@/actions/car.actions";
 import { carSchema } from "@/validations/car.schema";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import { CarCondition, Transmission, FuelType, CarStatus } from "@prisma/client";
 
 interface EditCarProps {
@@ -31,6 +32,12 @@ export function EditCarForm({ car }: EditCarProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Inisialisasi state gambar dari data yang sudah ada di DB
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    car.imageUrl ? car.imageUrl.split(",").map(url => url.trim()).filter(url => url !== "") : []
+  );
+  
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState("");
 
@@ -48,6 +55,7 @@ export function EditCarForm({ car }: EditCarProps) {
       year: Number(formVals.year),
       price: Number(formVals.price),
       mileage: Number(formVals.mileage),
+      imageUrl: imageUrls.join(","), // Pakai gambar dari state upload
     };
 
     const parsed = carSchema.safeParse(rawData);
@@ -167,14 +175,14 @@ export function EditCarForm({ car }: EditCarProps) {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-zinc-700">Galeri Foto (Pisahkan URL dengan koma)</label>
-            <textarea 
-              name="imageUrl" 
-              rows={3} 
-              defaultValue={car.imageUrl}
-              className="w-full rounded-md border border-zinc-300 p-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-zinc-500 shadow-sm resize-y mt-2"
-              placeholder="https://link1.jpg, https://link2.jpg, https://link3.jpg"
+            <label className="text-sm font-medium text-zinc-700 mb-4 inline-block">Galeri Foto Mobil</label>
+            
+            <ImageUpload 
+              value={imageUrls}
+              onChange={(urls: string[]) => setImageUrls(urls)}
+              onRemove={(url: string) => setImageUrls(imageUrls.filter(u => u !== url))}
             />
+
             {errorMap.imageUrl && <p className="text-xs text-red-500 pt-1 font-medium">*{errorMap.imageUrl}</p>}
           </div>
         </div>

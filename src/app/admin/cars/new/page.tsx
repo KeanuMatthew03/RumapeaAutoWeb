@@ -7,12 +7,14 @@ import { ArrowLeft, Upload, Loader2, Info } from "lucide-react";
 import Link from "next/link";
 import { addCarAction } from "@/actions/car.actions";
 import { carSchema } from "@/validations/car.schema";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import { CarCondition, Transmission, FuelType, CarStatus } from "@prisma/client";
 
 export default function NewCarForm() {
   const router = useRouter();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState("");
 
@@ -25,12 +27,13 @@ export default function NewCarForm() {
     const formData = new FormData(e.currentTarget);
     const formVals = Object.fromEntries(formData.entries()) as Record<string, string>;
     
-    // Parse angka agar Zod coerce bekerja secara ideal dari client string (FormData)
+    // Gabungkan gambar dari state ke data form
     const rawData = {
       ...formVals,
       year: Number(formVals.year),
       price: Number(formVals.price),
       mileage: Number(formVals.mileage),
+      imageUrl: imageUrls.join(","), // Gabungkan semua link gambar
     };
 
     // Validasi Zod Lokal
@@ -209,22 +212,19 @@ export default function NewCarForm() {
 
           <div className="pt-4 border-t border-zinc-100">
             <div className="space-y-1.5 flex flex-col">
-              <label htmlFor="imageUrl" className="text-sm font-medium text-zinc-700">
-                Galeri Foto (Pisahkan URL dengan koma)
+              <label className="text-sm font-medium text-zinc-700 mb-2">
+                Media & Galeri Foto Mobil
               </label>
-              <textarea 
-                name="imageUrl" 
-                id="imageUrl"
-                rows={3} 
-                className="w-full rounded-md border border-zinc-300 p-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-zinc-500 shadow-sm resize-y"
-                placeholder="https://link1.jpg, https://link2.jpg, https://link3.jpg"
+              
+              <ImageUpload 
+                value={imageUrls}
+                onChange={(urls: string[]) => setImageUrls(urls)}
+                onRemove={(url: string) => setImageUrls(imageUrls.filter((item) => item !== url))}
               />
+
               {errorMap.imageUrl && (
                 <p className="text-xs text-red-500 pt-1 font-medium tracking-tight">*{errorMap.imageUrl}</p>
               )}
-              <p className="text-xs text-zinc-400 pt-1 tracking-tight">
-                Tips: Foto pertama akan otomatis menjadi foto utama (Thumbnail).
-              </p>
             </div>
           </div>
 
